@@ -44,7 +44,7 @@
     <!-- Use Octomap in case of not empty map -->
     <group unless="$(arg empty_map)">
         <node pkg="octomap_server" type="octomap_server_node" name="octomap_server_velodyne">
-            <param name="resolution" value="0.03" /> 
+            <param name="resolution" value="0.25" /> 
             <param name="frame_id" type="string" value="fixed_frame" />
             <param name="sensor_model/max_range" value="20.0" />
             <remap from="cloud_in" to="/velodyne_points" />
