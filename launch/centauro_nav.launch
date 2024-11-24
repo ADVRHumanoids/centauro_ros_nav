@@ -4,6 +4,7 @@
     <arg name="empty_map" default="false"/>
 
     <arg name="use_sim_time" default="true"/>
+    <arg name="use_teb" default="true"/>
     
 
     <!-- MoveBase for starting Nav Stack with config file -->
@@ -19,13 +20,16 @@
         <rosparam file="$(find centauro_ros_nav)/config/centauro/costmap_common_params.yaml" command="load" ns="local_costmap" />
         <rosparam file="$(find centauro_ros_nav)/config/centauro/local_costmap_params.yaml" command="load" />
         <rosparam file="$(find centauro_ros_nav)/config/centauro/global_costmap_params.yaml" command="load" />
-        <rosparam file="$(find centauro_ros_nav)/config/centauro/dwa_local_planner_params.yaml" command="load" />
+
+        <rosparam if="$(arg use_teb)" file="$(find centauro_ros_nav)/config/centauro/teb_local_planner_params.yaml" command="load" />
+        <rosparam unless="$(arg use_teb)" file="$(find centauro_ros_nav)/config/centauro/dwa_local_planner_params.yaml" command="load" />
 
         <param name="use_sim_time" value="$(arg use_sim_time)"/>
 
-    </node>
+        <param if="$(arg use_teb)" name="base_local_planner" type="string" value="teb_local_planner/TebLocalPlannerROS" />
+        <param unless="$(arg use_teb)" name="base_local_planner" type="string" value="dwa_local_planner/DWAPlannerROS" />
 
-    <!-- <node pkg="centauro_ros_nav" type="NavCtrlNode" name="NavCtrlNode"/> -->
+    </node>
 
     <!-- Add time stamp to cmd vel Twist to TwistStamped -->
     <node pkg="centauro_ros_nav" name="cmd_add_stamp" type="cmd_add_stamp"/>
@@ -39,7 +43,7 @@
     <!-- Use Octomap in case of not empty map -->
     <group unless="$(arg empty_map)">
         <node pkg="octomap_server" type="octomap_server_node" name="octomap_server_velodyne">
-            <param name="resolution" value="0.03" /> 
+            <param name="resolution" value="0.10" /> 
             <param name="frame_id" type="string" value="odom" />
             <param name="sensor_model/max_range" value="20.0" />
             <remap from="cloud_in" to="/velodyne_points_filtered" />
