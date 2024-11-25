@@ -10,7 +10,7 @@ global_costmap:
   origin_y: -10.0
 
   #footprint: [[0.4, 0.29], [0.4, -0.29], [-0.4, -0.29], [-0.4 ,0.29]]
-  footprint_padding: 0.30
+  footprint_padding: 0.15
 
   plugins:
     - {name: static_layer,       type: "costmap_2d::StaticLayer"}
@@ -29,4 +29,4 @@ global_costmap:
 
   inflater_layer:
     inflation_radius: 1.5
-    cost_scaling_factor: 10.0
+    cost_scaling_factor: 7.5
