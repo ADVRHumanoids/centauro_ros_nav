@@ -1,32 +1,33 @@
 global_costmap:
   update_frequency: 2.0
-  publish_frequency: 1.0 #0
-  #static_map: false #False if not using an existing map
+  publish_frequency: 1.5 #0
+  static_map: false #False if not using an existing map
   #rolling_window: true
-  width: 15.0
-  height: 15.0
+  width: 50.0
+  height: 50.0
   resolution: 0.1
-  origin_x: -10.0
-  origin_y: -10.0
+#  origin_x: -10.0
+#  origin_y: -10.0
 
   #footprint: [[0.4, 0.29], [0.4, -0.29], [-0.4, -0.29], [-0.4 ,0.29]]
-  footprint_padding: 0.25
+  footprint_padding: 0.20
 
   plugins:
-    - {name: static_layer,       type: "costmap_2d::StaticLayer"}
+    - {name: static_layer,    type: "costmap_2d::StaticLayer"}
     - {name: obstacles_layer, type: "costmap_2d::ObstacleLayer"}
-    - {name: inflater_layer, type: "costmap_2d::InflationLayer"}
+    - {name: inflater_layer,  type: "costmap_2d::InflationLayer"}
 
   static_layer:
     map_topic: /projected_map
     subscribe_to_updates: true
+    lethal_cost_threshold: 100 #default:100 -> value=lethal from map
 
   obstacles_layer:
     footprint_clearing_enabled: true
-    observation_sources: velodyne
-    velodyne: {sensor_frame: pelvis, data_type: PointCloud2, topic: /velodyne_points_filtered, marking: true, clearing: true, min_obstacle_height: 1.0}
-    #d435i: {sensor_frame: pelvis, data_type: PointCloud2, topic: /D435i_camera/depth/color/points, marking: true, clearing: true, min_obstacle_height: 0.10}
-
+    observation_sources: velodyne d435i
+    velodyne: {sensor_frame: pelvis, data_type: PointCloud2, topic: /velodyne_points, marking: true, clearing: false, min_obstacle_height: 1.0, observation_persistence: 100000.0}
+    d435i: {sensor_frame: pelvis, data_type: PointCloud2, topic: /D435i_camera/depth/color/points, marking: true, clearing: false, min_obstacle_height: -0.75, observation_persistence: 100000.0}
+    
   inflater_layer:
     inflation_radius: 1.5
-    cost_scaling_factor: 6.5
+    cost_scaling_factor: 5.5

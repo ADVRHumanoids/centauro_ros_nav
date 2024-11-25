@@ -1,0 +1,71 @@
+<launch>
+
+    <arg name="mapping" default="false"/>
+
+    <node pkg="pointcloud_to_laserscan" name="pointcloud_to_laserscan_node" type="pointcloud_to_laserscan_node">
+        <remap from="cloud_in" to="velodyne_points"/>
+        
+        <param name="min_height" value="-0.10"/>
+        <param name="max_height" value="0.15"/>
+
+        <param name="min_range" value="0.20"/>
+        <param name="max_range" value="50.0"/>
+
+        <param name="target_frame" value="pelvis"/>
+        <remap from="scan" to="velodyne_laserscan"/>
+    </node>
+
+
+    <group if="$(arg mapping)">
+        
+        <node pkg="hector_mapping" type="hector_mapping" name="hector_mapping">
+            <param name="map_frame" value="map"/>
+            <param name="map_resolution" value="0.05"/>
+            <param name="odom_frame" value="pelvis"/>
+            <param name="base_frame" value="pelvis"/>
+            <remap from="map" to="projected_map"/>
+            <remap from="scan" to="velodyne_laserscan"/>
+        </node>
+
+        <node pkg="octomap_server" type="octomap_server_node" name="octomap_server_velodyne">
+            <param name="resolution" value="0.03" />  <!-- 0.05 -->
+            <param name="frame_id" type="string" value="map" />
+            <param name="sensor_model/max_range" value="20.0" />
+            <remap from="cloud_in" to="/velodyne_points" />
+
+            <remap from="projected_map" to="octomap_occupancy"/>
+            
+            <remap from="octomap_point_cloud_centers" to="octomap_velodyne" />
+            
+            <param name="latch" value="false"/> 
+                        
+            <!-- <param name="base_frame_id" value="head_down" /> -->
+            <param name="base_frame_id" value="pelvis" />
+            <param name="pointcloud_min_z" value="0.5" />
+            <param name="pointcloud_max_z" value="2.5" />
+            <param name="sensor_model/hit" value="0.55" />  <!--default 0.7-->
+            <param name="sensor_model/miss" value="0.45" />  <!--default 0.4-->
+            <param name="sensor_model/min" value="0.45" />  <!--default 0.12-->
+            <param name="sensor_model/max" value="0.55" />  <!--default 0.97-->
+        </node>
+
+    </group>
+
+    <group unless="$(arg mapping)">
+
+        <node pkg="amcl" type="amcl" name="amcl" output="screen" >
+            <param name="odom_frame_id"             value="odom"/>
+            <param name="base_frame_id"             value="pelvis"/>
+            <param name="global_frame_id"           value="map"/>
+            <remap from="scan"                      to="velodyne_laserscan"/>
+            <remap from="map"                       to="/projected_map"/>
+        </node>
+
+        <node pkg="map_server" name="map_load" type="map_server" args="/home/alessio/mymap.yaml">
+            <remap from="map" to="projected_map"/>
+            <param name="frame_id" value="map"/>
+        </node>
+
+    </group>
+
+</launch>
