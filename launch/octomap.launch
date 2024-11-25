@@ -1,0 +1,23 @@
+<launch>
+    
+        <node pkg="octomap_server" type="octomap_server_node" name="octomap_server_velodyne">
+            <param name="resolution" value="0.50" />  <!-- 0.05 -->
+            <param name="frame_id" type="string" value="map" />
+            <param name="sensor_model/max_range" value="500.0" />
+            <remap from="cloud_in" to="/cloud_pcd" />
+            
+            <remap from="octomap_point_cloud_centers" to="octomap_velodyne" />
+            
+            <param name="latch" value="false"/> 
+                        
+            <!-- <param name="base_frame_id" value="head_down" /> -->
+            <param name="base_frame_id" value="map" />
+            <param name="pointcloud_min_z" value="0.15" />
+            <param name="pointcloud_max_z" value="2.0" />
+            <param name="sensor_model/hit" value="0.55" />  <!--default 0.7-->
+            <param name="sensor_model/miss" value="0.45" />  <!--default 0.4-->
+            <param name="sensor_model/min" value="0.45" />  <!--default 0.12-->
+            <param name="sensor_model/max" value="0.55" />  <!--default 0.97-->
+        </node>
+
+</launch>

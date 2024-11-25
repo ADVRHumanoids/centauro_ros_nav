@@ -1,0 +1,7 @@
+image: nancy_map_res_0_25.pgm
+resolution: 0.250000
+origin: [-13.250000, -25.000000, 0.0]
+negate: 0
+occupied_thresh: 0.65
+free_thresh: 0.196
+

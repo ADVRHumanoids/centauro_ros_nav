@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <launch>
 
-    <arg name="empty_map" default="false"/>
+    <arg name="saved_map" default="true"/>
 
     <arg name="use_sim_time" default="true"/>
     <arg name="use_teb" default="true"/>
@@ -13,7 +13,7 @@
         <remap from="map" to="projected_map"/>
 
         <!-- Remap for later Node -->
-        <remap from="/cmd_vel" to="/omnisteering/cmd_vel"/>
+-        <remap from="/cmd_vel" to="/omnisteering/cmd_vel"/>
         
         <rosparam file="$(find centauro_ros_nav)/config/centauro/move_base_params.yaml" command="load"/>
         <rosparam file="$(find centauro_ros_nav)/config/centauro/costmap_common_params.yaml" command="load" ns="global_costmap" />
@@ -31,20 +31,17 @@
 
     </node>
 
-    <!-- Add time stamp to cmd vel Twist to TwistStamped -->
-    <!-- <node pkg="centauro_ros_nav" name="cmd_add_stamp" type="cmd_add_stamp"/> -->
-
     <!-- Load Empty Map -->
-    <node if="$(arg empty_map)" pkg="map_server" name="empty_map" type="map_server" args="$(find centauro_ros_nav)/maps/empty.yaml">
+    <node if="$(arg saved_map)" pkg="map_server" name="saved_map" type="map_server" args="$(find centauro_ros_nav)/maps/nancy_map_res_0_50.yaml">
         <remap from="map" to="projected_map"/>
-        <param name="frame_id" value="pelvis"/>
+        <param name="frame_id" value="map"/>
     </node>
     
     
     <!-- Use Octomap in case of not empty map -->
-    <group unless="$(arg empty_map)">
+    <group unless="$(arg saved_map)">
         <node pkg="octomap_server" type="octomap_server_node" name="octomap_server_velodyne">
-            <param name="resolution" value="0.10" />  <!-- 0.05 -->
+            <param name="resolution" value="0.05" />  <!-- 0.05 -->
             <param name="frame_id" type="string" value="odom" />
             <param name="sensor_model/max_range" value="20.0" />
             <remap from="cloud_in" to="/velodyne_points_filtered" />

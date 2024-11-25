@@ -1,4 +1,4 @@
-global_frame: odom
+global_frame: map
 robot_base_frame: pelvis
 
 #The default maximum distance from the robot at which an obstacle will be inserted
