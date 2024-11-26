@@ -18,7 +18,7 @@ oscillation_distance: 0.20
 controller_patience: 4.0
 planner_patience: 2.0
 
-conservative_reset_dist: 0.2
+#conservative_reset_dist: 0.2
 
 use_dijkstra: false #A* and not Dijkstra
 
