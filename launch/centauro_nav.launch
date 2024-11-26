@@ -32,7 +32,7 @@
     </node>
 
     <!-- Load Empty Map -->
-    <node if="$(arg saved_map)" pkg="map_server" name="saved_map" type="map_server" args="$(find centauro_ros_nav)/maps/nancy_map_res_0_50.yaml">
+    <node if="$(arg saved_map)" pkg="map_server" name="saved_map" type="map_server" args="$(find centauro_ros_nav)/maps/nancy_map_res_0_25.yaml">
         <remap from="map" to="projected_map"/>
         <param name="frame_id" value="map"/>
     </node>
