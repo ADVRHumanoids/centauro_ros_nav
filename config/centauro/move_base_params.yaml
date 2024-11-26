@@ -23,4 +23,3 @@ planner_patience: 2.5
 use_dijkstra: false #A* and not Dijkstra
 
 make_plan_clear_costmap: false
-

@@ -24,9 +24,10 @@ global_costmap:
 
   obstacles_layer:
     footprint_clearing_enabled: false
-    observation_sources:  velodyne d435i
+    observation_sources:  velodyne d435i d435i_octomap
     velodyne: {sensor_frame: pelvis, data_type: PointCloud2, topic: /velodyne_points_filtered, marking: true, clearing: true, min_obstacle_height: -0.25, max_obstacle_height: 1.0, obstacle_range: 8.0, raytrace_range: 150.0}
     d435i: {sensor_frame: pelvis, data_type: PointCloud2, topic: /D435i/D435i_camera/depth/color/points_filtered, marking: true, clearing: true, min_obstacle_height: -0.70, obstacle_range: 2.0, raytrace_range: 3.5, obstacle_persistence: 0.0}
+    d435i_octomap: {sensor_frame: pelvis, data_type: PointCloud2, topic: /D435i_octomap, marking: true, clearing: false, min_obstacle_height: -0.70, obstacle_range: 500.0}
     
     #zed_mini: {sensor_frame: pelvis, data_type: PointCloud2, topic: /zedx_left/zed_node/point_cloud/cloud_registered_filtered, marking: true, clearing: false, min_obstacle_height: 0.20, observation_persistence: 500.0}
 
