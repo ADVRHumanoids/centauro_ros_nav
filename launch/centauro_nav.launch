@@ -3,8 +3,8 @@
 
     <arg name="saved_map" default="true"/>
 
-    <arg name="use_sim_time" default="true"/>
-    <arg name="use_teb" default="true"/>
+    <arg name="use_sim_time" default="false"/>
+    <arg name="use_teb" default="false"/>
     
 
     <!-- MoveBase for starting Nav Stack with config file -->
@@ -37,10 +37,10 @@
         <param name="frame_id" value="map"/>
     </node>
         
-    <node pkg="octomap_server" type="octomap_server_node" name="octomap_server_d435i">
-        <param name="resolution" value="0.05" />  <!-- 0.05 -->
+    <!-- <node pkg="octomap_server" type="octomap_server_node" name="octomap_server_d435i">
+        <param name="resolution" value="0.05" /> 
         <param name="frame_id" type="string" value="map" />
-        <param name="sensor_model/max_range" value="1.5" />
+        <param name="sensor_model/max_range" value="2.0" />
         <remap from="cloud_in" to="/D435i/D435i_camera/depth/color/points_filtered" />
         
         <remap from="octomap_point_cloud_centers" to="D435i_octomap" />
@@ -48,6 +48,27 @@
         <param name="latch" value="false"/> 
                     
         <remap from="projected_map" to="octomap_d435i_map"/>
+
+        <param name="base_frame_id" value="pelvis" />
+        <param name="pointcloud_min_z" value="-0.75" />
+        <param name="pointcloud_max_z" value="2.5" />
+        <param name="sensor_model/hit" value="0.55" />  
+        <param name="sensor_model/miss" value="0.45" /> 
+        <param name="sensor_model/min" value="0.45" />
+        <param name="sensor_model/max" value="0.55" />
+    </node> -->
+
+    <node pkg="octomap_server" type="octomap_server_node" name="octomap_server_zed">
+        <param name="resolution" value="0.05" />  <!-- 0.05 -->
+        <param name="frame_id" type="string" value="map" />
+        <param name="sensor_model/max_range" value="2.0" />
+        <remap from="cloud_in" to="/zedx_left/zed_node/point_cloud/cloud_registered_filtered" />
+        
+        <remap from="octomap_point_cloud_centers" to="zed_octomap" />
+        
+        <param name="latch" value="false"/> 
+                    
+        <remap from="projected_map" to="octomap_zed_map"/>
 
         <param name="base_frame_id" value="pelvis" />
         <param name="pointcloud_min_z" value="-0.75" />
