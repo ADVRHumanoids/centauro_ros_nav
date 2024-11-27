@@ -36,5 +36,5 @@ local_costmap:
     zed_octomap: {sensor_frame: pelvis, data_type: PointCloud2, topic: /zed_octomap, marking: true, clearing: false, min_obstacle_height: -0.70, max_obstacle_height: 1.0, obstacle_range: 500.0}
     
   inflater_layer:
-    inflation_radius: 0.60 #0.075
-    cost_scaling_factor: 1.0  # Increasing --> decrease cost values, 10 default
+    inflation_radius: 0.70 #0.075
+    cost_scaling_factor: 3.0  # Increasing --> decrease cost values, 10 default
