@@ -83,8 +83,8 @@ bool ValidTargetSelectorManager::defineValidTarget(geometry_msgs::PoseStamped& t
     }
 
     // Define needed values in grid cell
-    candidate_pos_ = static_cast<int>((target.pose.position.x - occupancy_->info.origin.position.x)/occupancy_->info.resolution +
-                                      ((target.pose.position.y - occupancy_->info.origin.position.y)/occupancy_->info.resolution)*occupancy_->info.width);
+    candidate_pos_ = static_cast<int>((target.pose.position.x - occupancy_->info.origin.position.x)/occupancy_->info.resolution) +
+                     static_cast<int>((target.pose.position.y - occupancy_->info.origin.position.y)/occupancy_->info.resolution)*occupancy_->info.width;
         
     radius_grid_ = 1 + static_cast<int>(footprint_radius_/occupancy_->info.resolution);
     ROS_WARN("Radius: %d", radius_grid_);
@@ -98,10 +98,10 @@ bool ValidTargetSelectorManager::defineValidTarget(geometry_msgs::PoseStamped& t
 
             ROS_WARN("Robot Pose: %f %f", robot.position.x, robot.position.y);
             ROS_WARN("Colliding point: %f %f", colliding_point_[0], colliding_point_[1]);
+            ROS_WARN("TargetCell: %d", candidate_pos_);
+            ROS_WARN("CollidCell: %d", colliding_cell_);
 
-            ROS_WARN("Dist^2 coll-robot: %f", pow(colliding_point_[0] - robot.position.x, 2) + pow(colliding_point_[1] - robot.position.y, 2));
-            ROS_WARN("Dist^2 target-robot: %f", pow(nav_target_.pose.position.x - robot.position.x, 2) + pow(nav_target_.pose.position.y - robot.position.y, 2));
-
+            ROS_WARN("Dist^2 coll-robot: %f", min_dist_robot_);
             //Evalute the valid point in the opposite direction
             //TODO FastAtan
             angle_ = atan2(robot.position.y - colliding_point_[1],
@@ -147,7 +147,7 @@ bool ValidTargetSelectorManager::checkCollisionRadius(int depth, geometry_msgs::
 
     for(int j = -depth; j <= depth; j++){
         for(int k = -depth; k <= depth; k+=((abs(j) == depth)?1:2*depth)){
-            temp_cell_ = candidate_pos_ + j +k*occupancy_->info.width;
+            temp_cell_ = candidate_pos_ + k +j*occupancy_->info.width;
 
             if(temp_cell_ < 0 || temp_cell_ >= occupancy_->info.width*occupancy_->info.height ||
                occupancy_->data[temp_cell_] >= 100)
