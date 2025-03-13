@@ -1,0 +1,53 @@
+<!-- 
+    Action Nodes:
+        - ComputePathToPose: Planner Interface
+        - FollowPath: Controller Interface
+        - Spin, Wait, Backup: Behaviors
+        - ClearCostmapService
+
+    Condition Nodes:
+        - GoalUpdated: Checks if goal on goal topic has been updated
+        - GoalReached: Check if goal reached
+        - InitialPoseReceived: Check if a pose on "initial_pose" has been received
+        - isBatteryLow: Check battery level on battery topic
+
+    Decorator Nodes:
+        - Distance Controller: Tick children every time the robot has traveled a certain distance
+        - Rate Controller: Controls ticking of children at const frequ. (rate is an exposed port)
+        - Goal Updater: Update goal of children via ports of BT
+        - Single Trigger: Tick child only once then return FAILURE for all the next ticks
+        - Speed Controller: Controls ticks of child at a rate proportional to robot speed
+
+    Control: 
+        - PipelineSequence: Controls node re-ticks previous children when a child returns RUNNING.
+        - RecvoeryNode: it has only two children. It returns SUCCESS if and only if the first child return SUCCESS.
+                        If first return FAILURE ticking goes on until first return SUCCESS, second returns FAILURE.
+-->
+<root main_tree_to_execute="MainTree">
+    <BehaviorTree ID="MainTree">
+        <PipelineSequence name="PlanningPipeline">
+          
+            <RecoveryNode number_of_retries="2" name="GlobalPlanner">
+                <Fallback>
+                    <ReactiveSequence>
+                        <Inverter>
+                            <GlobalUpdatedGoal/>
+                        </Inverter>
+                        <IsPathValid path="{path}"/>
+                    </ReactiveSequence>                    
+                    <ComputePathToPose goal="{goal}" path="{path}" planner_id="GridBased"/>
+                </Fallback>
+                <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+            </RecoveryNode>
+
+            <!-- Check next nodes and decide which controller/locomotion mode to use -->            
+            <RecoveryNode name="Controller" number_of_retries="2">
+                <ReactiveSequence>
+                    <IsPathValid path="{path}"/>
+                    <FollowPath path="{path}" controller_id="{controller_id}"/>
+                </ReactiveSequence>
+            </RecoveryNode>
+
+        </PipelineSequence>
+    </BehaviorTree>
+  </root>

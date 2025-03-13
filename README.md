@@ -1,12 +1,15 @@
-# ROS Nav Stack for robots
+# ROS2 - Nav2 for robots
 
-Tested with Kyon (+MPC), RELAX, and CENTAURO.
+## Dependencies
+- Nav2
+
+Tested with CENTAURO.
 
 Input: Nav Target as PostStamped
 Output: /cmd_vel [Twist]
 
 ### Config Folder
-This folder contains the configuration files used by Nav Stack for `centauro` and `kyon`.
+This folder contains the configuration files used by Nav Stack for `centauro`.
 
 More specifically, the main params that may be modified are the following:
 
@@ -16,6 +19,16 @@ More specifically, the main params that may be modified are the following:
 - teb_local_planner and dwa_local_planner: are the config files related to the planner used at a local scale. Here info like min-max velocities, local footprint, tolerance are described.
 
 ### Run
-By running `centuaro_nav.launch` you will have:
-- move_base with the Nav Stack framework (planners, costmaps)
-- Octomap with dynamic occupancy grid or a staitc one loaded (specifying the one you want) 
+By running `centuaro_nav.launch.py` you will launch:
+- Nav2 nodes (controller, planner, bt_behavior, ..)
+- static transform map -> odom (identity)
+- rviz2
+- Octomap with dynamic 2D occupancy grid based on velodyne point cloud
+- valid_target_selector_node: used to adjust the nav target in case it is close/on occupied elements (which would result in planning failures)
+
+NOTE: Valid Target Selector Node is executed only when the nav target is sent via 'set_candidate_nav_target' service. If you send a target to Nav2 with the 2D Goal of Rviz, then valid target selector is bypassed.
+
+# Required
+- odom -> pelvis
+- xbot2-core running for robot's tf
+- velodyne point cloud
