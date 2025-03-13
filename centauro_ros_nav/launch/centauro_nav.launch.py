@@ -45,7 +45,9 @@ def generate_launch_description():
     robot_name = LaunchConfiguration('robot_name')
     use_octomap = LaunchConfiguration('use_octomap')
 
-    remappings = [('/tf', 'tf'), ('/tf_static', 'tf_static')]
+    remappings = [('/tf', 'tf'),
+                  ('/tf_static', 'tf_static'),
+                  ('/odom', '/centauro/odom')]
 
     # Declare the launch arguments
     declare_slam_cmd = DeclareLaunchArgument(
@@ -163,7 +165,7 @@ def generate_launch_description():
     )
 
 
-    static_map_odom_cmd = Node(
+    valid_target_selector_cmd = Node(
         package='centauro_ros_nav',
         executable='valid_target_selector_node',
         name='valid_target_selector_node',
@@ -190,7 +192,8 @@ def generate_launch_description():
 
     ld.add_action(octomap_velodyne_cmd)
     ld.add_action(static_map_odom_cmd)
-
+    ld.add_action(valid_target_selector_cmd)
+    
     # Add the actions to launch all of the navigation nodes
     ld.add_action(rviz_node_cmd)
     ld.add_action(bringup_cmd)

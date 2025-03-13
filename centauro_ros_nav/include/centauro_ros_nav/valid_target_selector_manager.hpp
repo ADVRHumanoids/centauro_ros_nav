@@ -19,43 +19,43 @@ using namespace std::chrono_literals;
 
 namespace valid_target_selector{
     
-class ValidTargetSelectorManager : public rclcpp::Node {
+    class ValidTargetSelectorManager : public rclcpp::Node {
 
-    public:
-        ValidTargetSelectorManager();
-        ~ValidTargetSelectorManager();
+        public:
+            ValidTargetSelectorManager();
+            ~ValidTargetSelectorManager();
 
-    private:
-        
-        rclcpp::TimerBase::SharedPtr timer_pub_pose_;
-        rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr send_nav_target_;
-        rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr occupancy_sub_;
-        
-        rclcpp::Service<centauro_ros_nav_srvs::srv::SendCandidateNavTarget>::SharedPtr get_candidate_target_srv_;
+        private:
+            
+            rclcpp::TimerBase::SharedPtr timer_pub_pose_;
+            rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr send_nav_target_;
+            rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr occupancy_sub_;
+            
+            rclcpp::Service<centauro_ros_nav_srvs::srv::SendCandidateNavTarget>::SharedPtr get_candidate_target_srv_;
 
-        nav_msgs::msg::OccupancyGrid::SharedPtr occupancy_;
+            nav_msgs::msg::OccupancyGrid::SharedPtr occupancy_;
 
-        geometry_msgs::msg::PoseStamped nav_target_;
-        std::string occupancy_map_topic_;
+            geometry_msgs::msg::PoseStamped nav_target_;
+            std::string occupancy_map_topic_;
 
-        std::vector<std::array<double,2>> footprint_;
-        double footprint_radius_; //Overestimate
+            std::vector<std::array<double,2>> footprint_;
+            double footprint_radius_; //Overestimate
 
-        int candidate_pos_, temp_cell_, radius_grid_, colliding_cell_;
-        std::array<double, 2> colliding_point_;
+            int candidate_pos_, temp_cell_, radius_grid_, colliding_cell_;
+            std::array<double, 2> colliding_point_;
 
-        double angle_, temp_dist_, min_dist_robot_;
+            double angle_, temp_dist_, min_dist_robot_;
 
-        //-------------------------------------------
-        void initNode();
-        
-        bool defineValidTarget(geometry_msgs::msg::PoseStamped& target, geometry_msgs::msg::Pose& robot);
+            //-------------------------------------------
+            void initNode();
+            
+            bool defineValidTarget(geometry_msgs::msg::PoseStamped& target, geometry_msgs::msg::Pose& robot);
 
-        void setCandidateTarget (const std::shared_ptr<centauro_ros_nav_srvs::srv::SendCandidateNavTarget::Request> request,
-                                 std::shared_ptr<centauro_ros_nav_srvs::srv::SendCandidateNavTarget::Response>      response);
+            void setCandidateTarget (const std::shared_ptr<centauro_ros_nav_srvs::srv::SendCandidateNavTarget::Request> request,
+                                    std::shared_ptr<centauro_ros_nav_srvs::srv::SendCandidateNavTarget::Response>      response);
 
-        bool checkCollisionRadius(int depth, geometry_msgs::msg::Point robot);
-};
+            bool checkCollisionRadius(int depth, geometry_msgs::msg::Point robot);
+    };
 
 }
 
