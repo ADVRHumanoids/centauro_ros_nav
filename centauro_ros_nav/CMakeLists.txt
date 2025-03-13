@@ -17,7 +17,7 @@ find_package(rclcpp_lifecycle REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
-find_package(centauro_ros_nav_srv REQUIRED)
+find_package(centauro_ros_nav_srvs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_eigen REQUIRED)
@@ -32,7 +32,7 @@ set(dependencies
   std_msgs
   geometry_msgs
   nav_msgs
-  centauro_ros_nav_srv
+  centauro_ros_nav_srvs
   tf2
   tf2_ros
   tf2_eigen

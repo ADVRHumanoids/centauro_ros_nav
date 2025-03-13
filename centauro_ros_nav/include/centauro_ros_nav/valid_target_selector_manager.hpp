@@ -13,7 +13,7 @@
 
 #include "nav_msgs/msg/occupancy_grid.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
-#include "centauro_ros_nav_srv/srv/send_candidate_nav_target.hpp"
+#include "centauro_ros_nav_srvs/srv/send_candidate_nav_target.hpp"
 
 using namespace std::chrono_literals;
 
@@ -31,7 +31,7 @@ class ValidTargetSelectorManager : public rclcpp::Node {
         rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr send_nav_target_;
         rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr occupancy_sub_;
         
-        rclcpp::Service<centauro_ros_nav_srv::srv::SendCandidateNavTarget>::SharedPtr get_candidate_target_srv_;
+        rclcpp::Service<centauro_ros_nav_srvs::srv::SendCandidateNavTarget>::SharedPtr get_candidate_target_srv_;
 
         nav_msgs::msg::OccupancyGrid::SharedPtr occupancy_;
 
@@ -51,8 +51,8 @@ class ValidTargetSelectorManager : public rclcpp::Node {
         
         bool defineValidTarget(geometry_msgs::msg::PoseStamped& target, geometry_msgs::msg::Pose& robot);
 
-        void setCandidateTarget (const std::shared_ptr<centauro_ros_nav_srv::srv::SendCandidateNavTarget::Request> request,
-                                 std::shared_ptr<centauro_ros_nav_srv::srv::SendCandidateNavTarget::Response>      response);
+        void setCandidateTarget (const std::shared_ptr<centauro_ros_nav_srvs::srv::SendCandidateNavTarget::Request> request,
+                                 std::shared_ptr<centauro_ros_nav_srvs::srv::SendCandidateNavTarget::Response>      response);
 
         bool checkCollisionRadius(int depth, geometry_msgs::msg::Point robot);
 };

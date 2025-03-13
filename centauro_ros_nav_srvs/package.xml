@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>centauro_ros_nav_srv</name>
+  <name>centauro_ros_nav_srvs</name>
   <version>0.0.0</version>
   <description>TODO: Package description</description>
   <maintainer email="alessio.deluca@iit.it">Alessio De Luca</maintainer>

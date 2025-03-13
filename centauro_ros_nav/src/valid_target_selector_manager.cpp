@@ -18,7 +18,7 @@ void ValidTargetSelectorManager::initNode(){
     footprint_radius_ = 0.0;
 
     // Service Server for candidate target correction
-    get_candidate_target_srv_ = this->create_service<centauro_ros_nav_srv::srv::SendCandidateNavTarget>("/set_candidate_nav_target",
+    get_candidate_target_srv_ = this->create_service<centauro_ros_nav_srvs::srv::SendCandidateNavTarget>("/set_candidate_nav_target",
                                     std::bind(&ValidTargetSelectorManager::setCandidateTarget, this, std::placeholders::_1, std::placeholders::_2));
 
     // Publisher
@@ -70,8 +70,8 @@ void ValidTargetSelectorManager::initNode(){
     footprint_radius_ = 0.5;
 }
 
-void ValidTargetSelectorManager::setCandidateTarget (const std::shared_ptr<centauro_ros_nav_srv::srv::SendCandidateNavTarget::Request> request,
-                               std::shared_ptr<centauro_ros_nav_srv::srv::SendCandidateNavTarget::Response>      response)
+void ValidTargetSelectorManager::setCandidateTarget (const std::shared_ptr<centauro_ros_nav_srvs::srv::SendCandidateNavTarget::Request> request,
+                               std::shared_ptr<centauro_ros_nav_srvs::srv::SendCandidateNavTarget::Response>      response)
 {
     response->success = defineValidTarget(request->target_pose, request->robot_pose);
 
