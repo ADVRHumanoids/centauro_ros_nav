@@ -2,6 +2,7 @@
 
 ## Dependencies
 - Nav2
+- perception_utils [github: aled96]
 
 Tested with CENTAURO.
 

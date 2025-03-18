@@ -25,6 +25,7 @@ def generate_launch_description():
     launch_dir = os.path.join(bringup_dir, 'launch')
 
     centauro_nav_dir = get_package_share_directory('centauro_ros_nav')
+    perception_utils_dir = get_package_share_directory('perception_utils')
 
     # Create the launch configuration variables
     slam = LaunchConfiguration('slam')
@@ -148,12 +149,27 @@ def generate_launch_description():
                    {'occupancy_max_z': 1.0},
                    {'sensor_model.hit': 0.55},
                    {'sensor_model.miss': 0.45}],
-                #    {'sensor_model.min': 0.12},
-                #    {'sensor_model.max': 0.97}],
        remappings=[('/cloud_in', '/lidar/points'),
                    ('/projected_map', '/map')]
     )
 
+    octomap_d435_cmd = Node(
+       condition=IfCondition(use_octomap),
+       namespace='local',
+       package='octomap_server',
+       executable='octomap_server_node',
+       name='octomap_server_d435',
+       output='screen',
+       parameters=[{'resolution': 0.10},
+                   {'frame_id': "odom"},
+                   {'base_frame_id': "D435i_camera_link"},
+                   {'sensor_model.max_range': 5.0},
+                   {'use_sim_time': use_sim_time},
+                   {'occupancy_min_z': -2.5},
+                   {'occupancy_max_z': 2.5}],
+       remappings=[('/local/cloud_in', '/D435i_camera/points_filtered'), #/D435i_camera/points_filtered /D435i_camera/points
+                   ('/local/projected_map', '/local/map')]
+    )
 
     static_map_odom_cmd = Node(
         package='tf2_ros',
@@ -174,6 +190,33 @@ def generate_launch_description():
                     {'map_topic_name' : "/map"}]
     )
 
+    # filter_d435_cmd = Node(
+    #     package='perception_utils',
+    #     executable='cloud_processing_node',
+    #     name='cloud_processing_node',
+    #     output='screen',
+    #     parameters=[{'use_sim_time': use_sim_time}]
+    # )
+
+    filter_d435_cmd = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(os.path.join(perception_utils_dir,
+                                                   'launch', 
+                                                   'cloud_filtering.launch.py')),
+        launch_arguments={
+            'use_sim_time': use_sim_time,
+            'voxel_dim': '0.02',
+            # 'sor_std_dev': '0.03',
+            # 'sor_mean_k': '7',
+            'pt_min_x': '-5.0',
+            'pt_max_x': '5.0',
+            'pt_min_y': '-5.0',
+            'pt_max_y': '5.0',
+            'pt_min_z': '-5.0',
+            'pt_max_z': '5.0',
+            'target_frame': 'pelvis',
+        }.items(),
+    )
+
     # Create the launch description and populate
     ld = LaunchDescription()
 
@@ -191,11 +234,13 @@ def generate_launch_description():
     ld.add_action(declare_use_respawn_cmd)
 
     ld.add_action(octomap_velodyne_cmd)
+    ld.add_action(octomap_d435_cmd)
     ld.add_action(static_map_odom_cmd)
     ld.add_action(valid_target_selector_cmd)
     
     # Add the actions to launch all of the navigation nodes
     ld.add_action(rviz_node_cmd)
     ld.add_action(bringup_cmd)
+    ld.add_action(filter_d435_cmd)
 
     return ld
