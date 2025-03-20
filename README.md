@@ -1,9 +1,15 @@
-# ROS Nav Stack for robots
+# ROS1 Nav Stack for robots
 
-Tested with Kyon (+MPC), RELAX, and CENTAURO.
+Tested with Kyon (+MPC) and CENTAURO.
 
 Input: Nav Target as PostStamped
 Output: /cmd_vel [Twist]
+
+### Dependencies:
+- sudo apt-get install ros-noetic-move-base
+- sudo apt-get install ros-noetic-octomap-server
+- sudo apt-get install ros-noetic-dwa-local-planner
+- sudo apt-get install ros-noetic-ros-noetic-teb-local-planner
 
 ### Config Folder
 This folder contains the configuration files used by Nav Stack for `centauro` and `kyon`.
