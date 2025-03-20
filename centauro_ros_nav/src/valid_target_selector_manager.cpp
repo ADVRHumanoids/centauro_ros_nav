@@ -80,7 +80,7 @@ void ValidTargetSelectorManager::setCandidateTarget (const std::shared_ptr<centa
 }
 
 bool ValidTargetSelectorManager::defineValidTarget(geometry_msgs::msg::PoseStamped& target, geometry_msgs::msg::Pose& robot){
-    RCLCPP_INFO(this->get_logger(), "SERVICE CALLED");
+    RCLCPP_INFO(this->get_logger(), "DefineValidTarget CALLED");
     
     if(occupancy_ == nullptr){
         RCLCPP_INFO(this->get_logger(), "occupancy is null");
@@ -92,7 +92,7 @@ bool ValidTargetSelectorManager::defineValidTarget(geometry_msgs::msg::PoseStamp
                      static_cast<int>((target.pose.position.y - occupancy_->info.origin.position.y)/occupancy_->info.resolution)*occupancy_->info.width;
         
     radius_grid_ = 1 + static_cast<int>(footprint_radius_/occupancy_->info.resolution);
-    RCLCPP_INFO(this->get_logger(), "Radius: %d", radius_grid_);
+    RCLCPP_DEBUG(this->get_logger(), "Radius: %d", radius_grid_);
     //Default one is the candidate
     nav_target_ = target;
 
@@ -101,16 +101,16 @@ bool ValidTargetSelectorManager::defineValidTarget(geometry_msgs::msg::PoseStamp
     for(int i = radius_grid_; i > 0; i--){
         if(checkCollisionRadius(i, robot.position)){
 
-            RCLCPP_WARN(this->get_logger(), "Robot Pose: %f %f", robot.position.x, robot.position.y);
-            RCLCPP_WARN(this->get_logger(), "Colliding point: %f %f", colliding_point_[0], colliding_point_[1]);
-            RCLCPP_WARN(this->get_logger(), "TargetCell: %d", candidate_pos_);
-            RCLCPP_WARN(this->get_logger(), "CollidCell: %d", colliding_cell_);
+            RCLCPP_DEBUG(this->get_logger(), "Robot Pose: %f %f", robot.position.x, robot.position.y);
+            RCLCPP_DEBUG(this->get_logger(), "Colliding point: %f %f", colliding_point_[0], colliding_point_[1]);
+            RCLCPP_DEBUG(this->get_logger(), "TargetCell: %d", candidate_pos_);
+            RCLCPP_DEBUG(this->get_logger(), "CollidCell: %d", colliding_cell_);
 
-            RCLCPP_WARN(this->get_logger(), "Dist^2 coll-robot: %f", min_dist_robot_);
+            RCLCPP_DEBUG(this->get_logger(), "Dist^2 coll-robot: %f", min_dist_robot_);
             //Evalute the valid point in the opposite direction
             //TODO FastAtan
-            angle_ = atan2(robot.position.y - colliding_point_[1],
-                           robot.position.x - colliding_point_[0]);
+            angle_ = atan2(target.pose.position.y - colliding_point_[1],
+                           target.pose.position.x - colliding_point_[0]);
             
             // Set new target pose (x, y, theta)
             // Difference if obstacle is between robot and target or if the obstacle is on the other side
@@ -139,7 +139,7 @@ bool ValidTargetSelectorManager::defineValidTarget(geometry_msgs::msg::PoseStamp
         }
     }
     
-    RCLCPP_WARN(this->get_logger(), "TARGET: %f %f - %f", nav_target_.pose.position.x, nav_target_.pose.position.y, angle_);
+    RCLCPP_DEBUG(this->get_logger(), "TARGET: %f %f - %f", nav_target_.pose.position.x, nav_target_.pose.position.y, angle_);
     
     return true;
 }
