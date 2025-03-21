@@ -98,7 +98,7 @@ bool ValidTargetSelectorManager::defineValidTarget(geometry_msgs::msg::PoseStamp
 
     //Check farthest obstacle in the occupancy (within footprint_radius_ distance from target)
     //Increase distance from center
-    for(int i = radius_grid_; i > 0; i--){
+    for(int i = radius_grid_; i >= 0; i--){
         if(checkCollisionRadius(i, robot.position)){
 
             RCLCPP_DEBUG(this->get_logger(), "Robot Pose: %f %f", robot.position.x, robot.position.y);
@@ -109,6 +109,7 @@ bool ValidTargetSelectorManager::defineValidTarget(geometry_msgs::msg::PoseStamp
             RCLCPP_DEBUG(this->get_logger(), "Dist^2 coll-robot: %f", min_dist_robot_);
             //Evalute the valid point in the opposite direction
             //TODO FastAtan
+            // if()
             angle_ = atan2(target.pose.position.y - colliding_point_[1],
                            target.pose.position.x - colliding_point_[0]);
             
