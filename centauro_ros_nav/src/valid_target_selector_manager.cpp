@@ -70,16 +70,16 @@ void ValidTargetSelectorManager::initNode(){
     footprint_radius_ = 0.5;
 }
 
-void ValidTargetSelectorManager::setCandidateTarget (const std::shared_ptr<centauro_ros_nav_srvs::srv::SendCandidateNavTarget::Request> request,
-                               std::shared_ptr<centauro_ros_nav_srvs::srv::SendCandidateNavTarget::Response>      response)
+void ValidTargetSelectorManager::setCandidateTarget (const std::shared_ptr<centauro_ros_nav_srvs::srv::SendCandidateNavTarget::Request>  request,
+                                                           std::shared_ptr<centauro_ros_nav_srvs::srv::SendCandidateNavTarget::Response> response)
 {
-    response->success = defineValidTarget(request->target_pose, request->robot_pose);
+    response->success = defineValidTarget(request);
 
     if(response->success)
         send_nav_target_->publish(nav_target_);
 }
 
-bool ValidTargetSelectorManager::defineValidTarget(geometry_msgs::msg::PoseStamped& target, geometry_msgs::msg::Pose& robot){
+bool ValidTargetSelectorManager::defineValidTarget(const std::shared_ptr<centauro_ros_nav_srvs::srv::SendCandidateNavTarget::Request> request){
     RCLCPP_INFO(this->get_logger(), "DefineValidTarget CALLED");
     
     if(occupancy_ == nullptr){
@@ -88,20 +88,20 @@ bool ValidTargetSelectorManager::defineValidTarget(geometry_msgs::msg::PoseStamp
     }
 
     // Define needed values in grid cell
-    candidate_pos_ = static_cast<int>((target.pose.position.x - occupancy_->info.origin.position.x)/occupancy_->info.resolution) +
-                     static_cast<int>((target.pose.position.y - occupancy_->info.origin.position.y)/occupancy_->info.resolution)*occupancy_->info.width;
+    candidate_pos_ = static_cast<int>((request->target_pose.pose.position.x - occupancy_->info.origin.position.x)/occupancy_->info.resolution) +
+                     static_cast<int>((request->target_pose.pose.position.y - occupancy_->info.origin.position.y)/occupancy_->info.resolution)*occupancy_->info.width;
         
     radius_grid_ = 1 + static_cast<int>(footprint_radius_/occupancy_->info.resolution);
     RCLCPP_DEBUG(this->get_logger(), "Radius: %d", radius_grid_);
     //Default one is the candidate
-    nav_target_ = target;
+    nav_target_ = request->target_pose;
 
     //Check farthest obstacle in the occupancy (within footprint_radius_ distance from target)
     //Increase distance from center
     for(int i = radius_grid_; i >= 0; i--){
-        if(checkCollisionRadius(i, robot.position)){
+        if(checkCollisionRadius(i, request->robot_pose.position)){
 
-            RCLCPP_DEBUG(this->get_logger(), "Robot Pose: %f %f", robot.position.x, robot.position.y);
+            RCLCPP_DEBUG(this->get_logger(), "Robot Pose: %f %f", request->robot_pose.position.x, request->robot_pose.position.y);
             RCLCPP_DEBUG(this->get_logger(), "Colliding point: %f %f", colliding_point_[0], colliding_point_[1]);
             RCLCPP_DEBUG(this->get_logger(), "TargetCell: %d", candidate_pos_);
             RCLCPP_DEBUG(this->get_logger(), "CollidCell: %d", colliding_cell_);
@@ -110,8 +110,8 @@ bool ValidTargetSelectorManager::defineValidTarget(geometry_msgs::msg::PoseStamp
             //Evalute the valid point in the opposite direction
             //TODO FastAtan
             // if()
-            angle_ = atan2(target.pose.position.y - colliding_point_[1],
-                           target.pose.position.x - colliding_point_[0]);
+            angle_ = atan2(request->target_pose.pose.position.y - colliding_point_[1],
+                           request->target_pose.pose.position.x - colliding_point_[0]);
             
             // Set new target pose (x, y, theta)
             // Difference if obstacle is between robot and target or if the obstacle is on the other side
@@ -132,9 +132,10 @@ bool ValidTargetSelectorManager::defineValidTarget(geometry_msgs::msg::PoseStamp
             nav_target_.pose.position.x = colliding_point_[0] + static_cast<double>(2 + radius_grid_)*occupancy_->info.resolution*cos(angle_);
             nav_target_.pose.position.y = colliding_point_[1] + static_cast<double>(2 + radius_grid_)*occupancy_->info.resolution*sin(angle_);
            
-            
-            nav_target_.pose.orientation.z = sin(angle_/2);
-            nav_target_.pose.orientation.w = cos(angle_/2);
+            if(request->change_orientation){
+                nav_target_.pose.orientation.z = sin(angle_/2);
+                nav_target_.pose.orientation.w = cos(angle_/2);
+            }
             
             break;
         }
