@@ -73,28 +73,24 @@ void ValidTargetSelectorManager::initNode(){
 void ValidTargetSelectorManager::setCandidateTarget (const std::shared_ptr<centauro_ros_nav_srvs::srv::SendCandidateNavTarget::Request>  request,
                                                            std::shared_ptr<centauro_ros_nav_srvs::srv::SendCandidateNavTarget::Response> response)
 {
-    response->success = defineValidTarget(request);
-
-    if(response->success)
-        send_nav_target_->publish(nav_target_);
-}
-
-bool ValidTargetSelectorManager::defineValidTarget(const std::shared_ptr<centauro_ros_nav_srvs::srv::SendCandidateNavTarget::Request> request){
     RCLCPP_INFO(this->get_logger(), "DefineValidTarget CALLED");
     
     if(occupancy_ == nullptr){
         RCLCPP_INFO(this->get_logger(), "occupancy is null");
-        return false;
+        response->success = false;
+        return ;
     }
 
     // Define needed values in grid cell
-    candidate_pos_ = static_cast<int>((request->target_pose.pose.position.x - occupancy_->info.origin.position.x)/occupancy_->info.resolution) +
-                     static_cast<int>((request->target_pose.pose.position.y - occupancy_->info.origin.position.y)/occupancy_->info.resolution)*occupancy_->info.width;
+    candidate_pos_ = static_cast<int>((request->target_pose.position.x - occupancy_->info.origin.position.x)/occupancy_->info.resolution) +
+                     static_cast<int>((request->target_pose.position.y - occupancy_->info.origin.position.y)/occupancy_->info.resolution)*occupancy_->info.width;
         
     radius_grid_ = 1 + static_cast<int>(footprint_radius_/occupancy_->info.resolution);
     RCLCPP_DEBUG(this->get_logger(), "Radius: %d", radius_grid_);
     //Default one is the candidate
-    nav_target_ = request->target_pose;
+    nav_target_.header.stamp = this->get_clock()->now();
+    nav_target_.header.frame_id = request->reference_frame;
+    nav_target_.pose = request->target_pose;
 
     //Check farthest obstacle in the occupancy (within footprint_radius_ distance from target)
     //Increase distance from center
@@ -109,9 +105,8 @@ bool ValidTargetSelectorManager::defineValidTarget(const std::shared_ptr<centaur
             RCLCPP_DEBUG(this->get_logger(), "Dist^2 coll-robot: %f", min_dist_robot_);
             //Evalute the valid point in the opposite direction
             //TODO FastAtan
-            // if()
-            angle_ = atan2(request->target_pose.pose.position.y - colliding_point_[1],
-                           request->target_pose.pose.position.x - colliding_point_[0]);
+            angle_ = atan2(request->target_pose.position.y - colliding_point_[1],
+                           request->target_pose.position.x - colliding_point_[0]);
             
             // Set new target pose (x, y, theta)
             // Difference if obstacle is between robot and target or if the obstacle is on the other side
@@ -140,10 +135,16 @@ bool ValidTargetSelectorManager::defineValidTarget(const std::shared_ptr<centaur
             break;
         }
     }
+
+    response->new_target = nav_target_.pose;
     
-    RCLCPP_DEBUG(this->get_logger(), "TARGET: %f %f - %f", nav_target_.pose.position.x, nav_target_.pose.position.y, angle_);
+    RCLCPP_INFO(this->get_logger(), "NEW  TARGET: %f %f - %f", nav_target_.pose.position.x,
+                                                               nav_target_.pose.position.y,
+                                                               angle_);
     
-    return true;
+    response->success = true;
+    send_nav_target_->publish(nav_target_);
+
 }
 
 bool ValidTargetSelectorManager::checkCollisionRadius(int depth, geometry_msgs::msg::Point robot){

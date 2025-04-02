@@ -4,20 +4,25 @@
 - Nav2
 - perception_utils [github: aled96]
 
-Tested with CENTAURO.
+Tested in ROS2 with CENTAURO.
 
-Input: Nav Target as PostStamped
-Output: /cmd_vel [Twist]
+Input: Nav Target [geometry_msgs::msg::PoseStamped]
+Output: /cmd_vel [geometry_msgs::msg::TwistStamped]
 
-### Config Folder
-This folder contains the configuration files used by Nav Stack for `centauro`.
+### Packages
+This repo contains two ROS2 pacakges:
+- centauro_ros_nav
+- centauro_ros_nav_srvs
 
-More specifically, the main params that may be modified are the following:
+#### _centauro_ros_nav_
+More specifically:
+- _behavior_trees_: containes the BT used by Nav2 to define the behavior.
+- _config/centauro_nav_params.yaml_: contains the parameters for all the nodes running within the Nav2 framework, i.e. local and global costmaps, planner, controller etc. If you want to change them, this is the config file you have to modify. 
+- _launch/centauro_nav.launch.py_: launch Nav2 and other custom nodes
+- _maps_: Empty at the moment.
 
-- costmap_common_params: contains frame information and footprint
-- global_costmap_params: here there is the map_topic and the point clouds used to mark occupied/free areas
-- local_costmap_params: same as for the global_costmap_params
-- teb_local_planner and dwa_local_planner: are the config files related to the planner used at a local scale. Here info like min-max velocities, local footprint, tolerance are described.
+#### _centauro_ros_nav_srvs_
+ROS2 package for the definition of a custom service: `centauro_ros_nav_srvs::srv::SendCandidateNavTarget`.
 
 ### Run
 By running `centuaro_nav.launch.py` you will launch:
@@ -25,11 +30,14 @@ By running `centuaro_nav.launch.py` you will launch:
 - static transform map -> odom (identity)
 - rviz2
 - Octomap with dynamic 2D occupancy grid based on velodyne point cloud
+- Octomap 3D based on 'D435i_camera/points_filtered'
 - valid_target_selector_node: used to adjust the nav target in case it is close/on occupied elements (which would result in planning failures)
 
 NOTE: Valid Target Selector Node is executed only when the nav target is sent via 'set_candidate_nav_target' service. If you send a target to Nav2 with the 2D Goal of Rviz, then valid target selector is bypassed.
+Valid Target Selector is used only if the target is sent through the `centauro_ros_nav_srvs::srv::SendCandidateNavTarget` service.
 
 # Required
 - odom -> pelvis
 - xbot2-core running for robot's tf
 - velodyne point cloud
+- camera-pelvis TF

@@ -46,8 +46,6 @@ namespace valid_target_selector{
             //-------------------------------------------
             void initNode();
             
-            bool defineValidTarget(const std::shared_ptr<centauro_ros_nav_srvs::srv::SendCandidateNavTarget::Request> request);
-
             void setCandidateTarget (const std::shared_ptr<centauro_ros_nav_srvs::srv::SendCandidateNavTarget::Request> request,
                                     std::shared_ptr<centauro_ros_nav_srvs::srv::SendCandidateNavTarget::Response>      response);
 

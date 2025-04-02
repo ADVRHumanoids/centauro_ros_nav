@@ -1,5 +1,7 @@
 geometry_msgs/Pose robot_pose
-geometry_msgs/PoseStamped target_pose
+geometry_msgs/Pose target_pose
 bool change_orientation
+string reference_frame
 ---
+geometry_msgs/Pose new_target
 bool success
