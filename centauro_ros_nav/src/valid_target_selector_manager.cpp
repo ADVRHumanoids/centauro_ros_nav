@@ -127,11 +127,15 @@ void ValidTargetSelectorManager::setCandidateTarget (const std::shared_ptr<centa
             nav_target_.pose.position.x = colliding_point_[0] + static_cast<double>(2 + radius_grid_)*occupancy_->info.resolution*cos(angle_);
             nav_target_.pose.position.y = colliding_point_[1] + static_cast<double>(2 + radius_grid_)*occupancy_->info.resolution*sin(angle_);
            
-            if(request->change_orientation){
-                nav_target_.pose.orientation.z = sin(angle_/2);
-                nav_target_.pose.orientation.w = cos(angle_/2);
+            //If rotate_to_point --> Change target angle to update final orientation
+            if(request->rotate_to_point){
+                angle_ = atan2(nav_target_.pose.position.y - request->point_to_face.y,
+                               nav_target_.pose.position.x - request->point_to_face.x);
             }
-            
+
+            nav_target_.pose.orientation.z = sin(angle_/2);
+            nav_target_.pose.orientation.w = cos(angle_/2);
+                        
             break;
         }
     }

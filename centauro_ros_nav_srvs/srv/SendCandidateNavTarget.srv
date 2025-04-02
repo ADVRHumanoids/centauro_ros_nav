@@ -1,6 +1,7 @@
 geometry_msgs/Pose robot_pose
 geometry_msgs/Pose target_pose
-bool change_orientation
+bool rotate_to_point
+geometry_msgs/Point point_to_face
 string reference_frame
 ---
 geometry_msgs/Pose new_target
