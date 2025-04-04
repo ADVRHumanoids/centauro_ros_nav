@@ -1,53 +1,44 @@
-<!-- 
-    Action Nodes:
-        - ComputePathToPose: Planner Interface
-        - FollowPath: Controller Interface
-        - Spin, Wait, Backup: Behaviors
-        - ClearCostmapService
-
-    Condition Nodes:
-        - GoalUpdated: Checks if goal on goal topic has been updated
-        - GoalReached: Check if goal reached
-        - InitialPoseReceived: Check if a pose on "initial_pose" has been received
-        - isBatteryLow: Check battery level on battery topic
-
-    Decorator Nodes:
-        - Distance Controller: Tick children every time the robot has traveled a certain distance
-        - Rate Controller: Controls ticking of children at const frequ. (rate is an exposed port)
-        - Goal Updater: Update goal of children via ports of BT
-        - Single Trigger: Tick child only once then return FAILURE for all the next ticks
-        - Speed Controller: Controls ticks of child at a rate proportional to robot speed
-
-    Control: 
-        - PipelineSequence: Controls node re-ticks previous children when a child returns RUNNING.
-        - RecvoeryNode: it has only two children. It returns SUCCESS if and only if the first child return SUCCESS.
-                        If first return FAILURE ticking goes on until first return SUCCESS, second returns FAILURE.
--->
 <root main_tree_to_execute="MainTree">
-    <BehaviorTree ID="MainTree">
-        <PipelineSequence name="PlanningPipeline">
-          
-            <RecoveryNode number_of_retries="2" name="GlobalPlanner">
-                <Fallback>
-                    <ReactiveSequence>
-                        <Inverter>
-                            <GlobalUpdatedGoal/>
-                        </Inverter>
-                        <IsPathValid path="{path}"/>
-                    </ReactiveSequence>                    
-                    <ComputePathToPose goal="{goal}" path="{path}" planner_id="GridBased"/>
-                </Fallback>
-                <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
-            </RecoveryNode>
-
-            <!-- Check next nodes and decide which controller/locomotion mode to use -->            
-            <RecoveryNode name="Controller" number_of_retries="2">
-                <ReactiveSequence>
-                    <IsPathValid path="{path}"/>
-                    <FollowPath path="{path}" controller_id="{controller_id}"/>
-                </ReactiveSequence>
-            </RecoveryNode>
-
-        </PipelineSequence>
-    </BehaviorTree>
-  </root>
+  <BehaviorTree ID="MainTree">
+    <RecoveryNode number_of_retries="6" name="NavigateRecovery">
+      <PipelineSequence name="NavigateWithReplanning">
+        <ControllerSelector selected_controller="{selected_controller}" default_controller="FollowPath" topic_name="controller_selector"/>
+        <PlannerSelector selected_planner="{selected_planner}" default_planner="GridBased" topic_name="planner_selector"/>
+        <RateController hz="1.0">
+          <RecoveryNode number_of_retries="1" name="ComputePathToPose">
+            <ComputePathToPose goal="{goal}" path="{path}" planner_id="{selected_planner}" error_code_id="{compute_path_error_code}" error_msg="{compute_path_error_msg}"/>
+            <Sequence>
+              <WouldAPlannerRecoveryHelp error_code="{compute_path_error_code}"/>
+              <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+            </Sequence>
+          </RecoveryNode>
+        </RateController>
+        <RecoveryNode number_of_retries="1" name="FollowPath">
+          <FollowPath path="{path}" controller_id="{selected_controller}" error_code_id="{follow_path_error_code}" error_msg="{follow_path_error_msg}"/>
+          <Sequence>
+            <WouldAControllerRecoveryHelp error_code="{follow_path_error_code}"/>
+            <ClearEntireCostmap name="ClearLocalCostmap-Context" service_name="local_costmap/clear_entirely_local_costmap"/>
+          </Sequence>
+        </RecoveryNode>
+      </PipelineSequence>
+      <Sequence>
+        <Fallback>
+          <WouldAControllerRecoveryHelp error_code="{follow_path_error_code}"/>
+          <WouldAPlannerRecoveryHelp error_code="{compute_path_error_code}"/>
+        </Fallback>
+        <ReactiveFallback name="RecoveryFallback">
+          <GoalUpdated/>
+          <RoundRobin name="RecoveryActions">
+            <Sequence name="ClearingActions">
+              <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
+              <ClearEntireCostmap name="ClearGlobalCostmap-Subtree" service_name="global_costmap/clear_entirely_global_costmap"/>
+            </Sequence>
+            <Spin spin_dist="1.57" error_code_id="{spin_error_code}" error_msg="{spin_error_msg}"/>
+            <Wait wait_duration="5.0"/>
+            <BackUp backup_dist="0.30" backup_speed="0.05" error_code_id="{backup_error_code}" error_msg="{backup_error_msg}"/>
+          </RoundRobin>
+        </ReactiveFallback>
+      </Sequence>
+    </RecoveryNode>
+  </BehaviorTree>
+</root>
