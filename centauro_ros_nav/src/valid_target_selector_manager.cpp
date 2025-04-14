@@ -13,10 +13,6 @@ void ValidTargetSelectorManager::initNode(){
     this->declare_parameter("map_topic_name", "");
     occupancy_map_topic_ = this->get_parameter("map_topic_name").as_string();
 
-    RCLCPP_INFO(this->get_logger(), "I READ: %s", occupancy_map_topic_.c_str());
-
-    footprint_radius_ = 0.0;
-
     // Service Server for candidate target correction
     get_candidate_target_srv_ = this->create_service<centauro_ros_nav_srvs::srv::SendCandidateNavTarget>("/set_candidate_nav_target",
                                     std::bind(&ValidTargetSelectorManager::setCandidateTarget, this, std::placeholders::_1, std::placeholders::_2));
@@ -28,7 +24,8 @@ void ValidTargetSelectorManager::initNode(){
     // Subscriber
     auto occupancyCallback =
       [this](nav_msgs::msg::OccupancyGrid::SharedPtr msg) -> void {
-         occupancy_ = msg;
+            occupancy_ = msg;
+            occupancy_size_ = static_cast<int>(msg->info.width*msg->info.height);
       };
 
     occupancy_sub_ = this->create_subscription<nav_msgs::msg::OccupancyGrid>(occupancy_map_topic_, 10, occupancyCallback);
@@ -45,29 +42,35 @@ void ValidTargetSelectorManager::initNode(){
     }
     auto parameters = parameters_client->get_parameters({"footprint"});
     
-    RCLCPP_INFO(this->get_logger(), "OK");
-
     std::string footprint_str;
     // Get a few of the parameters just set.
     footprint_str = parameters[0].value_to_string();
-    RCLCPP_INFO(this->get_logger(), "Params %s", footprint_str.c_str());
 
     std::regex numberRegex(R"([-+]?\d*\.?\d+)");  // Regex to match floating-point numbers
     std::sregex_iterator it(footprint_str.begin(), footprint_str.end(), numberRegex);
     std::sregex_iterator end;
 
     std::vector<double> numbers;
+    numbers.reserve(std::distance(it, end));
+
     while (it != end) {
         numbers.push_back(std::stof(it->str()));  // Convert to float and store
         ++it;
     }
 
+    // footprint_radius_ = 0.5;
+    footprint_radius_ = 0.0;
+
+    footprint_.reserve(numbers.size());
     // Group numbers into pairs and store them as arrays in the result vector
     for (size_t i = 0; i < numbers.size(); i += 2) {
         footprint_.push_back({numbers[i], numbers[i + 1]});
-    }
 
-    footprint_radius_ = 0.5;
+        if(footprint_radius_ < fabs(numbers[i]))
+            footprint_radius_ = fabs(numbers[i]); 
+        if(footprint_radius_ < fabs(numbers[i+1]))
+            footprint_radius_ = fabs(numbers[i+1]); 
+    }
 }
 
 void ValidTargetSelectorManager::setCandidateTarget (const std::shared_ptr<centauro_ros_nav_srvs::srv::SendCandidateNavTarget::Request>  request,
@@ -124,8 +127,11 @@ void ValidTargetSelectorManager::setCandidateTarget (const std::shared_ptr<centa
             //     nav_target_.pose.position.x += static_cast<double>(2 + radius_grid_ + i)*occupancy_->info.resolution*cos(angle_);
             //     nav_target_.pose.position.y += static_cast<double>(2 + radius_grid_ + i)*occupancy_->info.resolution*sin(angle_);
             // }
-            nav_target_.pose.position.x = colliding_point_[0] + static_cast<double>(2 + radius_grid_)*occupancy_->info.resolution*cos(angle_);
-            nav_target_.pose.position.y = colliding_point_[1] + static_cast<double>(2 + radius_grid_)*occupancy_->info.resolution*sin(angle_);
+
+            module_ = static_cast<double>(2 + radius_grid_)*occupancy_->info.resolution;
+
+            nav_target_.pose.position.x = colliding_point_[0] + module_*cos(angle_);
+            nav_target_.pose.position.y = colliding_point_[1] + module_*sin(angle_);
            
             //If rotate_to_point --> Change target angle to update final orientation
             if(request->rotate_to_point){
@@ -151,24 +157,26 @@ void ValidTargetSelectorManager::setCandidateTarget (const std::shared_ptr<centa
 
 }
 
-bool ValidTargetSelectorManager::checkCollisionRadius(int depth, geometry_msgs::msg::Point robot){
+bool ValidTargetSelectorManager::checkCollisionRadius(const int depth, const geometry_msgs::msg::Point& robot){
 
     // Look for the occupied elements closest to the robot
     min_dist_robot_ = 100000.0;
     colliding_cell_ = -1;
 
     for(int j = -depth; j <= depth; j++){
-        for(int k = -depth; k <= depth; k+=((abs(j) == depth)?1:2*depth)){
-            temp_cell_ = candidate_pos_ + k +j*occupancy_->info.width;
+            
+        offset_temp_cell_ =  j*occupancy_->info.width;
 
-            if(temp_cell_ < 0 || temp_cell_ >= static_cast<int>(occupancy_->info.width*occupancy_->info.height) ||
-               occupancy_->data[temp_cell_] >= 100)
+        for(int k = -depth; k <= depth; k+=((abs(j) == depth)?1:2*depth)){
+            temp_cell_ = candidate_pos_ + k + offset_temp_cell_;
+
+            if(temp_cell_ < 0 || temp_cell_ >= occupancy_size_ || occupancy_->data[temp_cell_] >= 100)
             {
                 colliding_point_[0] = (temp_cell_%occupancy_->info.width)*occupancy_->info.resolution + occupancy_->info.origin.position.x;
                 colliding_point_[1] = (temp_cell_/occupancy_->info.width)*occupancy_->info.resolution + occupancy_->info.origin.position.y;
             
-                temp_dist_ = pow(colliding_point_[0] - robot.x, 2) + 
-                             pow(colliding_point_[1] - robot.y, 2);
+                temp_dist_ = (colliding_point_[0] - robot.x)*(colliding_point_[0] - robot.x) + 
+                             (colliding_point_[1] - robot.y)*(colliding_point_[1] - robot.y);
 
                 if(temp_dist_ < min_dist_robot_){
                     min_dist_robot_ = temp_dist_;

@@ -41,7 +41,11 @@ namespace valid_target_selector{
             int candidate_pos_, temp_cell_, radius_grid_, colliding_cell_;
             std::array<double, 2> colliding_point_;
 
-            double angle_, temp_dist_, min_dist_robot_;
+            double module_, angle_, temp_dist_, min_dist_robot_;
+
+            int occupancy_size_;
+
+            int offset_temp_cell_;
 
             //-------------------------------------------
             void initNode();
@@ -49,7 +53,7 @@ namespace valid_target_selector{
             void setCandidateTarget (const std::shared_ptr<centauro_ros_nav_srvs::srv::SendCandidateNavTarget::Request> request,
                                     std::shared_ptr<centauro_ros_nav_srvs::srv::SendCandidateNavTarget::Response>      response);
 
-            bool checkCollisionRadius(int depth, geometry_msgs::msg::Point robot);
+            inline bool checkCollisionRadius(const int depth, const geometry_msgs::msg::Point& robot);
     };
 
 }
